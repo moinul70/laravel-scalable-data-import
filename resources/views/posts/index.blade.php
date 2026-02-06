@@ -46,9 +46,24 @@
                                 <td class="fw-bold text-muted">{{ $post->external_id }}</td>
                                 <td>{{ Str::headline($post->title) }}</td>
                                 <td>
-                                    <span class="text-secondary small">
-                                        {{ Str::limit($post->body, 70) }}
-                                    </span>
+                                    <div class="content-wrapper">
+                                        <span id="short-{{ $post->id }}" class="text-secondary small">
+                                            {{ Str::limit($post->body, 70) }}
+                                        </span>
+
+                                        <span id="full-{{ $post->id }}" class="text-dark d-none small">
+                                            {{ $post->body }}
+                                        </span>
+
+                                        @if(strlen($post->body) > 70)
+                                        <button type="button"
+                                            onclick="toggleContent({{ $post->id }})"
+                                            id="btn-{{ $post->id }}"
+                                            class="btn btn-link btn-sm p-0 ms-1">
+                                            View More
+                                        </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
 
@@ -80,7 +95,6 @@
         const alertBox = document.getElementById('status-alert');
         const csrfToken = document.querySelector('input[name="_token"]').value;
 
-        // 1. Initial UI State: Loading
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
         alertBox.classList.remove('d-none', 'alert-success', 'alert-danger');
@@ -88,7 +102,7 @@
         alertBox.innerHTML = '<strong>Request Sent:</strong> Initializing background data sync...';
 
         try {
-            // 2. Trigger the Sync via JSON POST
+            // Trigger the Sync via JSON POST
             const response = await fetch(this.action, {
                 method: 'POST',
                 headers: {
@@ -100,7 +114,7 @@
 
             if (!response.ok) throw new Error('Server returned an error.');
 
-            // 3. Start Polling the /sync-status endpoint
+            // Start Polling the /sync-status endpoint
             const checkStatus = setInterval(async () => {
                 const statusRes = await fetch('/sync-status');
                 const data = await statusRes.json();
@@ -108,9 +122,9 @@
                 if (data.status === 'finished') {
                     clearInterval(checkStatus); // Stop asking the server
 
-                    // 4. Update UI to success and start 10s countdown
+                    // 4. Update UI to success and start 6s countdown
                     alertBox.classList.replace('alert-info', 'alert-success');
-                    let countdown = 10;
+                    let countdown = 6;
                     const timer = setInterval(() => {
                         alertBox.innerHTML = `<strong>Success!</strong> Data fetched and stored. Page will refresh in <b>${countdown}</b> seconds...`;
                         countdown--;
@@ -119,7 +133,23 @@
                             clearInterval(timer);
                             window.location.reload(); // Final reload to show data
                         }
-                    }, 1000);
+                    }, 500);
+                }
+                if (data.status === 'Unavailable') {
+                    clearInterval(checkStatus); // Stop asking the server
+
+                    // 4. Update UI to success and start 6s countdown
+                    alertBox.classList.replace('alert-info', 'alert-sucfailedcess');
+                    let countdown = 6;
+                    const timer = setInterval(() => {
+                        alertBox.innerHTML = `<strong>Failed!</strong> Unavailable response, try again later. Page will refresh in <b>${countdown}</b> seconds...`;
+                        countdown--;
+
+                        if (countdown < 0) {
+                            clearInterval(timer);
+                            window.location.reload(); // Final reload to show data
+                        }
+                    }, 500);
                 }
             }, 2000); // Poll every 2 seconds
 
@@ -131,6 +161,22 @@
             alertBox.innerText = "Error: " + error.message;
         }
     });
+
+    function toggleContent(id) {
+        const shortText = document.getElementById(`short-${id}`);
+        const fullText = document.getElementById(`full-${id}`);
+        const btn = document.getElementById(`btn-${id}`);
+
+        if (fullText.classList.contains('d-none')) {
+            fullText.classList.remove('d-none');
+            shortText.classList.add('d-none');
+            btn.innerText = 'View Less';
+        } else {
+            fullText.classList.add('d-none');
+            shortText.classList.remove('d-none');
+            btn.innerText = 'View More';
+        }
+    }
 </script>
 
 </html>
