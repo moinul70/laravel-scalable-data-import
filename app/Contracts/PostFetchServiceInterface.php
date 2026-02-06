@@ -9,4 +9,6 @@ interface PostFetchServiceInterface
     public function fetch(): Collection;
 
     public function store(Collection $data): void;
+
+    public function syncPosts(): void;
 }
