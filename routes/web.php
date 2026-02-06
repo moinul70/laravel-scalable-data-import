@@ -1,17 +1,25 @@
 <?php
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\SyncController;
 
-//get the current posts
-Route::get('/posts', [PostController::class, 'index']);
-//sync the posts from external api
-Route::post('/sync', [PostController::class, 'triggerSync'])->name('posts.sync');
-
-Route::get('/sync-status', function () {
-    return response()->json([
-        'status' => Cache::get('sync_status', 'idle')
-    ]);
+Route::controller(PostController::class)
+    ->group(function () {
+        // Get current posts
+        Route::get('/', 'index')->name('posts.index');
 });
 
+Route::controller(SyncController::class)
+    ->group(function () {
+
+        // Sync status
+        Route::get('/sync-status', 'syncStatus')
+            ->name('posts.sync.status')
+            ->middleware('throttle:10,1'); // max 10 requests per minute
+
+        // Sync posts from external API
+        Route::post('/sync', 'triggerSync')
+            ->name('posts.sync')
+            ->middleware('throttle:4,1'); // max 4 requests per minute
+});

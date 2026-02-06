@@ -27,7 +27,7 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                    <table class="table table-hover align-middle table-bordered">
                         <thead class="table-dark">
                             <tr>
                                 <th scope="col" style="width: 80px;">SL</th>
