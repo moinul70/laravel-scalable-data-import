@@ -36,7 +36,7 @@ Built to demonstrate handling of **large datasets**, **background processing**, 
 
 ## 🛠️ Requirements
 
-- PHP >= 8.1
+- PHP >= 8.4
 - Composer
 - Docker & Docker Compose
 - MySQL / MariaDB (via Laravel Sail)
